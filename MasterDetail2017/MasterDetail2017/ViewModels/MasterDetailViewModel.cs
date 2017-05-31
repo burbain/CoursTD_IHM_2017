@@ -1,17 +1,19 @@
-﻿using MasterDetail2017.Model;
+﻿using Library;
+using MasterDetail2017.Model;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace MasterDetail2017.ViewModels
 {
     /// <summary>
     /// View model
     /// </summary>
-    public class MasterDetailViewModel : INotifyPropertyChanged
+    public class MasterDetailViewModel : ViewModelBase
     {
         #region private
         private string _masterDetailLabel;
@@ -19,10 +21,19 @@ namespace MasterDetail2017.ViewModels
         private string _nom;
         private string _nom1;
         private PersonneModel _selectedPersonne;
+        private bool _IsVisible;
+        private bool _isClick;
 
         #endregion
 
         #region Public
+
+        public DelegateCommand ClickCommand { get; private set; }
+
+        public DelegateCommand MouseOverCommand { get; private set; }
+
+        private DetailWindow _view;
+
         public string MasterDetailLabel
         {
             get
@@ -73,6 +84,12 @@ namespace MasterDetail2017.ViewModels
             set
             {
                 _selectedPersonne = value;
+                _isClick = true;
+                if (ClickCommand != null)
+                {
+                    ClickCommand.RaiseCanExecuteChanged();
+                }
+                NotifyPropertyChanged("SelectedPersonne");
             }
         }
 
@@ -87,6 +104,20 @@ namespace MasterDetail2017.ViewModels
             {
                 _nom1 = value;
                 NotifyPropertyChanged("Nom1");
+            }
+        }
+
+        public bool IsVisible
+        {
+            get
+            {
+                return _IsVisible;
+            }
+
+            set
+            {
+                _IsVisible = value;
+                NotifyPropertyChanged("IsVisible");
             }
         }
 
@@ -108,16 +139,35 @@ namespace MasterDetail2017.ViewModels
                     Prenom ="THIBAUT"
                 }
             };
+
+            IsVisible = true;
+            _isClick = true;
+            ClickCommand = new DelegateCommand(OnExecuteClick, CanExcuteClick);
+            MouseOverCommand = new DelegateCommand(OnMouseOver);
+            _view = new DetailWindow();
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void NotifyPropertyChanged(String info)
+        private void OnMouseOver(object obj)
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(info));
-            }
+            MessageBox.Show("ça marche !");
+        }
+
+        private bool CanExcuteClick(object obj)
+        {
+            return _isClick;
+        }
+
+        private void OnExecuteClick(object obj)
+        {          
+            _view.Show();
+
+            ButtonPressedEvent.GetInstance().Handler += OnClose;
+        }
+
+        private void OnClose(object sender, EventArgs e)
+        {
+            _view.Close();
+            ButtonPressedEvent.GetInstance().Handler -= OnClose;
         }
     }
 }
